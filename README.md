@@ -1,6 +1,6 @@
 # xbox-rumble-test
 
-This project provides a Python script, `xbox_rumble.py`, to test rumble functionality on an Xbox controller.
+This project provides a Python script, `xbox_rumble.py`, to test rumble functionality on an Xbox 360/ Xbox One controller.
 
 ## What It Does
 
