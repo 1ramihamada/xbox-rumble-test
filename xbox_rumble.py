@@ -38,7 +38,6 @@ class RumbleTester:
         print("1. Custom rumble test")
         print("2. Quick test (75% intensity)")
         print("3. Manual mode")
-        print("4. Stop rumble")
         print("q. Quit")
         print("\nChoice: ", end='', flush=True)
 
