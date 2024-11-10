@@ -2,6 +2,7 @@
 import sys
 import time
 import pygame
+from threading import Thread
 
 class RumbleTester:
     def __init__(self):
@@ -18,6 +19,7 @@ class RumbleTester:
         self.running = True
         self.controller = None
         self.connect_controller()
+        self.warning_mode = False
 
     def connect_controller(self):
         """Initialize and connect to the first available controller."""
@@ -35,7 +37,8 @@ class RumbleTester:
         print(f"\n{self.BLUE}=== Xbox Controller Rumble Test ==={self.RESET}")
         print("1. Custom rumble test")
         print("2. Quick test (75% intensity)")
-        print("3. Stop rumble")
+        print("3. Manual mode")
+        print("4. Stop rumble")
         print("q. Quit")
         print("\nChoice: ", end='', flush=True)
 
@@ -79,8 +82,43 @@ class RumbleTester:
         time.sleep(2)
         self.controller.stop_rumble()
 
+    def manual_mode(self):
+        """Enter manual mode where pressing 'A' triggers rumble."""
+        print(f"\n{self.BLUE}Manual mode activated. Press 'A' to rumble at 75% intensity.{self.RESET}")
+        print(f"{self.BLUE}Press 'X' to enter Warning Test mode.{self.RESET}")
+        print(f"{self.BLUE}Press 'B' to exit manual mode.{self.RESET}")
+
+        self.warning_mode = False
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.JOYBUTTONDOWN:
+                    if self.controller.get_button(0):  # A button
+                        self.controller.rumble(0.75, 0.75, 0)
+                    elif self.controller.get_button(2):  # X button
+                        print(f"{self.RED}Entering Warning Test mode...{self.RESET}")
+                        self.warning_mode = True
+                        warning_thread = Thread(target=self.warning_test)
+                        warning_thread.start()
+                    elif self.controller.get_button(1):  # B button
+                        self.stop_rumble()
+                        return
+                elif event.type == pygame.JOYBUTTONUP:
+                    if event.button == 0:  # A button released
+                        self.controller.stop_rumble()
+
+            time.sleep(0.01)
+
+    def warning_test(self):
+        """Run the Warning Test mode with 100% intensity in intervals."""
+        while self.warning_mode:
+            self.controller.rumble(1.0, 1.0, 2000)
+            time.sleep(0.5)
+            self.controller.stop_rumble()
+            time.sleep(0.2)  # Short pause between vibrations
+
     def stop_rumble(self):
         """Stop any ongoing rumble effect."""
+        self.warning_mode = False
         self.controller.stop_rumble()
         print(f"\n{self.GREEN}Rumble stopped{self.RESET}")
 
@@ -88,14 +126,14 @@ class RumbleTester:
         """Main program loop."""
         while self.running:
             self.show_menu()
-            
             choice = input().lower()
-            
             if choice == '1':
                 self.custom_rumble_test()
             elif choice == '2':
                 self.quick_test()
             elif choice == '3':
+                self.manual_mode()
+            elif choice == '4':
                 self.stop_rumble()
             elif choice == 'q':
                 self.running = False
@@ -107,8 +145,8 @@ class RumbleTester:
 
     def cleanup(self):
         """Clean up pygame resources."""
+        self.stop_rumble()
         if self.controller:
-            self.controller.stop_rumble()
             self.controller.quit()
         pygame.quit()
 
